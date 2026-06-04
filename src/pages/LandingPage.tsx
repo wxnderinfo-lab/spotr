@@ -107,7 +107,7 @@ export default function LandingPage() {
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16 pb-20">
         {/* Large logo in top-left */}
         <Link to="/" className="absolute top-6 left-6 z-30">
-          <img src="/spotrr.png" alt="spotrr.png" className="w-32 sm:w-40 md:w-48 h-auto object-contain rounded-md shadow-md" />
+          <img src="/spotrr.png" alt="spotrr.png" className="w-48 sm:w-56 md:w-72 h-auto object-contain shadow-md" />
         </Link>
         {/* Animated background blobs */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">

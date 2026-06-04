@@ -68,9 +68,8 @@ export default function Footer() {
             © {year} Spotr. All rights reserved.
           </p>
           <div className="flex items-center gap-1 text-xs text-neutral-400 dark:text-neutral-600">
-            <span>Made with</span>
-            <span className="text-neutral-700 dark:text-neutral-300">♥</span>
-            <span>in the Netherlands</span>
+            <span>Made by</span>
+            <span className="text-neutral-700 dark:text-neutral-300 font-semibold">CHAS</span>
           </div>
         </div>
       </div>
