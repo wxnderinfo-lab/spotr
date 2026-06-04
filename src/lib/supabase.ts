@@ -3,11 +3,47 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  realtime: {
-    params: { eventsPerSecond: 10 },
-  },
-});
+function createMock() {
+  const noop = () => ({ data: null, error: null });
+
+  class MockQuery {
+    select() { return this; }
+    insert() { return this; }
+    update() { return this; }
+    delete() { return this; }
+    eq() { return this; }
+    or() { return this; }
+    maybeSingle() { return Promise.resolve({ data: null, error: null }); }
+    single() { return Promise.resolve({ data: null, error: null }); }
+    then(resolve: any) { return Promise.resolve({ data: null, error: null }).then(resolve); }
+  }
+
+  const mock = {
+    from: (_: string) => new MockQuery(),
+    rpc: async () => ({ data: null, error: null }),
+    removeChannel: () => {},
+    channel: () => ({ on: () => ({}) , subscribe: async () => ({}) }),
+    storage: { from: () => ({ getPublicUrl: () => ({ data: { publicUrl: '' } }) }) },
+    auth: {
+      getSession: async () => ({ data: { session: null } }),
+      onAuthStateChange: (_: any) => ({ data: { subscription: { unsubscribe: () => {} } } }),
+      signInWithPassword: async () => ({ data: null, error: null }),
+      signUp: async () => ({ data: { user: null, session: null }, error: null }),
+      signOut: async () => ({ error: null }),
+    },
+  } as any;
+
+  return mock;
+}
+
+export const supabase = (supabaseUrl && supabaseAnonKey)
+  ? createClient(supabaseUrl, supabaseAnonKey, { realtime: { params: { eventsPerSecond: 10 } } })
+  : (() => {
+      // Warn in dev and fall back to a mock client so the app can render without a Supabase setup
+      // eslint-disable-next-line no-console
+      console.warn('VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY is not set — using mock supabase client for local development.');
+      return createMock();
+    })();
 
 export type UserType = 'client' | 'freelancer' | 'business' | 'admin';
 export type SubscriptionTier = 'free' | 'pro' | 'premium';

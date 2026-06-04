@@ -50,10 +50,7 @@ export default function Header() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group">
-            <div className="w-8 h-8 bg-neutral-900 dark:bg-white rounded-xl flex items-center justify-center transition-transform duration-200 group-hover:scale-105">
-              <span className="text-white dark:text-neutral-900 font-bold text-sm tracking-tight">S</span>
-            </div>
-            <span className="font-bold text-xl tracking-tight text-neutral-900 dark:text-white">Spotr</span>
+            <img src="/spotrr.png" alt="spotrr.png" className="w-8 h-8 rounded-xl object-contain transition-transform duration-200 group-hover:scale-105" />
           </Link>
 
           {/* Desktop Nav */}

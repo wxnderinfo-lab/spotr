@@ -31,12 +31,9 @@ export default function Footer() {
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8 lg:gap-12">
           {/* Brand */}
           <div className="col-span-2 lg:col-span-2">
-            <Link to="/" className="flex items-center gap-2 mb-4 group w-fit">
-              <div className="w-8 h-8 bg-neutral-900 dark:bg-white rounded-xl flex items-center justify-center transition-transform group-hover:scale-105">
-                <span className="text-white dark:text-neutral-900 font-bold text-sm">S</span>
-              </div>
-              <span className="font-bold text-xl tracking-tight text-neutral-900 dark:text-white">Spotr</span>
-            </Link>
+              <Link to="/" className="flex items-center gap-2 mb-4 group w-fit">
+                <img src="/spotrr.png" alt="spotrr.png" className="w-8 h-8 rounded-xl object-contain transition-transform group-hover:scale-105" />
+              </Link>
             <p className="text-sm text-neutral-500 dark:text-neutral-400 leading-relaxed max-w-xs mb-6">
               The premium marketplace connecting businesses and individuals with verified freelancers and service providers.
             </p>

@@ -105,6 +105,10 @@ export default function LandingPage() {
     <div className="min-h-screen bg-white dark:bg-neutral-950">
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16 pb-20">
+        {/* Large logo in top-left */}
+        <Link to="/" className="absolute top-6 left-6 z-30">
+          <img src="/spotrr.png" alt="spotrr.png" className="w-32 sm:w-40 md:w-48 h-auto object-contain rounded-md shadow-md" />
+        </Link>
         {/* Animated background blobs */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute -top-1/4 -left-1/4 w-[60vw] h-[60vw] max-w-3xl max-h-3xl bg-gradient-to-br from-neutral-100 to-neutral-200 dark:from-neutral-800/40 dark:to-neutral-900/20 morph-blob opacity-60 dark:opacity-30" />
