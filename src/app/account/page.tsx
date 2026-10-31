@@ -7,6 +7,41 @@ import { Notice, PageHeader } from "@/components/ui";
 
 export const metadata: Metadata = { title: "Mijn account" };
 
+// Pro: statistieken uit je eigen gegevens (geen tracking van bezoekers).
+async function ProviderStats({ userId, hasPro }: { userId: string; hasPro: boolean }) {
+  if (!hasPro) {
+    return (
+      <section className="card p-5" aria-labelledby="stats">
+        <h2 id="stats" className="font-bold">Statistieken</h2>
+        <p className="mt-1 text-sm text-ink-soft">Met Pro zie je hier hoeveel voorstellen je stuurde, hoeveel er zijn geaccepteerd en hoe je opdrachten zijn afgerond. <Link href="/prijzen" className="link">Over Pro</Link></p>
+      </section>
+    );
+  }
+  const supabase = await createClient();
+  const since = new Date(Date.now() - 90 * 864e5).toISOString();
+  const [{ data: props }, { data: stats }] = await Promise.all([
+    supabase.from("proposals").select("status, created_at").eq("provider_id", userId).gte("created_at", since),
+    supabase.rpc("profile_stats", { p_profile: userId }),
+  ]);
+  const sent = props?.length ?? 0;
+  const accepted = (props ?? []).filter((p) => p.status === "geaccepteerd").length;
+  const tiles: [string, string][] = [
+    ["Voorstellen (90 dagen)", String(sent)],
+    ["Geaccepteerd", String(accepted)],
+    ["Acceptatiegraad", sent ? `${Math.round((accepted / sent) * 100)}%` : "–"],
+    ["Afgerond via Jobmarkt", String(stats?.completed_as_provider ?? 0)],
+    ["Gem. beoordeling", stats?.rating_count ? `${String(stats.rating_avg).replace(".", ",")} (${stats.rating_count})` : "–"],
+  ];
+  return (
+    <section className="card p-5" aria-labelledby="stats">
+      <h2 id="stats" className="font-bold">Statistieken</h2>
+      <dl className="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-5">
+        {tiles.map(([k, v]) => <div key={k}><dt className="text-xs text-muted">{k}</dt><dd className="text-xl font-extrabold">{v}</dd></div>)}
+      </dl>
+    </section>
+  );
+}
+
 export default async function AccountPage({ searchParams }: { searchParams: Promise<{ wachtwoord?: string }> }) {
   const me = await requireMe("/account");
   const { wachtwoord } = await searchParams;
@@ -79,6 +114,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
           )}
           <Link href="/berichten" className="card p-5 hover:border-line-strong"><p className="font-semibold">Berichten</p><p className="mt-1 text-sm text-muted">{s.unread_messages ? `${s.unread_messages} ongelezen` : "Geen ongelezen berichten"}</p></Link>
         </section>
+        {me.profile.is_provider && <ProviderStats userId={me.id} hasPro={s.has_pro} />}
       </div>
     </>
   );

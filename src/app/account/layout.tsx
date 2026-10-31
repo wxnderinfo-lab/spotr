@@ -24,7 +24,7 @@ export default async function AccountLayout({ children }: { children: React.Reac
   ];
   return (
     <div className="container-page grid gap-8 py-8 lg:grid-cols-[15rem_1fr]">
-      <aside>
+      <aside className="min-w-0">
         <nav aria-label="Account" className="lg:sticky lg:top-20">
           <p className="mb-2 px-3 text-sm text-muted">Ingelogd als <span className="font-semibold text-ink">{me.profile.display_name}</span></p>
           <ul className="flex gap-1 overflow-x-auto pb-2 lg:flex-col lg:overflow-visible lg:pb-0">

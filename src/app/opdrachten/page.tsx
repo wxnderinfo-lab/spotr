@@ -1,10 +1,10 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { SlidersHorizontal } from "lucide-react";
 import { getCategoryTree, hasFacetFilters, parseJobFilters, searchJobs, toQuery, PER_PAGE } from "@/lib/data";
 import { getMe } from "@/lib/auth";
 import { JobCard } from "@/components/cards";
 import { AutoSubmitForm } from "@/components/AutoSubmit";
+import { FilterPanel } from "@/components/FilterPanel";
 import { PlaceInput } from "@/components/PlaceInput";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { EmptyState, PageHeader, Pagination } from "@/components/ui";
@@ -43,8 +43,8 @@ export default async function JobsPage({ searchParams }: Props) {
 
       <div className="grid gap-8 lg:grid-cols-[17rem_1fr]">
         <aside aria-label="Filters">
-          <AutoSubmitForm action="/opdrachten" className="card space-y-4 p-4 lg:sticky lg:top-20">
-            <p className="flex items-center gap-2 font-semibold"><SlidersHorizontal className="h-4 w-4" aria-hidden /> Filters</p>
+          <FilterPanel activeCount={Object.entries(f).filter(([k, v]) => k !== "pagina" && k !== "sorteer" && v !== undefined).length}>
+          <AutoSubmitForm action="/opdrachten" className="space-y-4">
             <div>
               <label htmlFor="f-q" className="label">Zoekwoord</label>
               <input id="f-q" name="q" defaultValue={f.q} className="input" placeholder="Bijv. schilderen" />
@@ -106,6 +106,7 @@ export default async function JobsPage({ searchParams }: Props) {
               {filtered && <Link href="/opdrachten" className="btn-ghost">Wissen</Link>}
             </div>
           </AutoSubmitForm>
+          </FilterPanel>
         </aside>
 
         <section aria-labelledby="resultaten">

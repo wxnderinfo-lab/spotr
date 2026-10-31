@@ -45,7 +45,7 @@ export default async function ReviewsPage() {
           <ul className="space-y-4">
             {(received as { id: string; rating: number; body: string; response: string | null; job_title: string; reviewer_name: string; reviewee_role: string }[]).map((r) => (
               <li key={r.id} className="card p-5">
-                <Stars value={r.rating} count={1} />
+                <Stars value={r.rating} single />
                 <p className="mt-1 text-sm text-muted">{r.reviewer_name} over “{r.job_title}” · als {r.reviewee_role}</p>
                 {r.body && <p className="mt-2 text-ink-soft">{r.body}</p>}
                 {r.response ? (

@@ -31,7 +31,7 @@ export function WaitlistForm({ categories }: { categories: Pick<Category, "id" |
       <input type="text" name="website" tabIndex={-1} autoComplete="off" className="hidden" aria-hidden />
       <SubmitButton>Houd me op de hoogte</SubmitButton>
       <div className="sm:col-span-4"><FormMessage state={state} /></div>
-      <p className="text-sm text-muted sm:col-span-4">We gebruiken je adres alleen hiervoor en verwijderen het na de lancering in jouw categorie.</p>
+      <p className="text-sm text-muted sm:col-span-4">We gebruiken je adres alleen hiervoor en verwijderen het uiterlijk na een jaar.</p>
     </form>
   );
 }

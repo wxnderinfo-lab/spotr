@@ -147,7 +147,7 @@ export default async function ProfilePage({ params }: Props) {
                 {providerReviews.map((r) => (
                   <li key={r.id} className="card p-5">
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <Stars value={r.rating} count={1} />
+                      <Stars value={r.rating} single />
                       <span className="chip">Geverifieerde opdracht · {formatShort(r.completed_at)}</span>
                     </div>
                     <p className="mt-1 text-sm text-muted">{r.reviewer_name} over “{r.job_title}” ({r.job_category})</p>

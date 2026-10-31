@@ -44,9 +44,9 @@ export default async function HomePage() {
                 <Search className="h-5 w-5 text-muted" aria-hidden />
                 <input id="home-q" name="q" placeholder="Bijv. schilder, video-editor, verhuizen" className="min-h-11 w-full bg-transparent text-base outline-none placeholder:text-muted/80" />
               </div>
-              <div className="flex gap-2">
-                <button type="submit" className="btn-primary flex-1 sm:flex-none">Vind een professional</button>
-                <button type="submit" formAction="/opdrachten" className="btn-secondary flex-1 sm:flex-none">Vind werk</button>
+              <div className="grid grid-cols-2 gap-2 sm:flex">
+                <button type="submit" className="btn-primary whitespace-nowrap px-3">Vind een professional</button>
+                <button type="submit" formAction="/opdrachten" className="btn-secondary whitespace-nowrap px-3">Vind werk</button>
               </div>
             </form>
             <div className="mt-5 flex flex-wrap items-center gap-3">

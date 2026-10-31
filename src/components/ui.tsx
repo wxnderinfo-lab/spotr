@@ -44,7 +44,18 @@ export function Notice({ tone = "info", title, children }: { tone?: "info" | "ok
   );
 }
 
-export function Stars({ value, count, size = "sm" }: { value: number | null; count?: number; size?: "sm" | "md" }) {
+/** Sterren: gemiddelde met aantal, of één losse beoordeling (single). */
+export function Stars({ value, count, size = "sm", single = false }: { value: number | null; count?: number; size?: "sm" | "md"; single?: boolean }) {
+  if (single && value !== null) {
+    return (
+      <span className="inline-flex items-center gap-1.5 text-sm">
+        <span className="flex" aria-hidden>
+          {[1, 2, 3, 4, 5].map((i) => <Star key={i} className={`h-4 w-4 ${i <= value ? "fill-ink text-ink" : "text-line-strong"}`} />)}
+        </span>
+        <span className="font-semibold">{value} van 5</span>
+      </span>
+    );
+  }
   if (!count || value === null) {
     return <span className="text-sm text-muted">Nog geen beoordelingen</span>;
   }

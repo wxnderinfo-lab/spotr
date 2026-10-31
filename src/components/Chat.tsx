@@ -58,7 +58,11 @@ export function Chat({ conversationId, meId, initial, names, disabled }: {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [live, messages, conversationId]);
 
-  useEffect(() => endRef.current?.scrollIntoView({ block: "end" }), [messages.length]);
+  // accolades: scrollIntoView geeft in nieuwere browsers een Promise terug,
+  // en een effect mag alleen een opruimfunctie teruggeven
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ block: "end" });
+  }, [messages.length]);
 
   async function send(body: string, attachment?: { path: string; name: string }) {
     setSending(true);

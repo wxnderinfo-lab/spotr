@@ -18,7 +18,7 @@ export function OnboardingForm({ displayName, usernameSuggestion, defaultRole, n
       <Field label="Naam op je profiel" htmlFor="display_name" error={fe.display_name}>
         <input id="display_name" name="display_name" defaultValue={displayName} required minLength={2} maxLength={60} className="input" aria-invalid={!!fe.display_name} />
       </Field>
-      <Field label="Profielnaam (in je link)" htmlFor="username" error={fe.username} hint={<>jobmarkt.nl/professionals/<strong>{usernameSuggestion}</strong>, alleen kleine letters, cijfers en streepjes.</>}>
+      <Field label="Profielnaam (in je link)" htmlFor="username" error={fe.username} hint={<>Je profiel komt op /professionals/<strong>{usernameSuggestion}</strong>. Alleen kleine letters, cijfers en streepjes.</>}>
         <input id="username" name="username" defaultValue={usernameSuggestion} required pattern="[a-z0-9][a-z0-9-]{1,38}[a-z0-9]" className="input" aria-invalid={!!fe.username} />
       </Field>
       <Field label="Geboortedatum" htmlFor="birthdate" error={fe.birthdate} hint="Niet openbaar. Kan later niet zelf worden gewijzigd.">
