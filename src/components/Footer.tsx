@@ -1,76 +1,75 @@
-import { Link } from './Router';
-import { Globe, Twitter, Linkedin, Instagram } from 'lucide-react';
+import Link from "next/link";
+import { site } from "@/config/site";
+import { LogoMark } from "./Logo";
 
-export default function Footer() {
-  const year = new Date().getFullYear();
+const columns = [
+  {
+    title: "Opdrachtgevers",
+    links: [
+      ["/opdracht-plaatsen", "Plaats een opdracht"],
+      ["/professionals", "Vind een professional"],
+      ["/categorieen", "Alle categorieën"],
+      ["/kennisbank/duidelijke-opdracht-schrijven", "Een goede opdracht schrijven"],
+    ],
+  },
+  {
+    title: "Professionals",
+    links: [
+      ["/opdrachten", "Vind werk"],
+      ["/prijzen", "Gratis en Pro"],
+      ["/kennisbank/starten-als-zelfstandige", "Starten als zelfstandige"],
+      ["/aanmelden", "Profiel aanmaken"],
+    ],
+  },
+  {
+    title: "Jobmarkt",
+    links: [
+      ["/hoe-het-werkt", "Hoe het werkt"],
+      ["/over-jobmarkt", "Over Jobmarkt"],
+      ["/kennisbank", "Kennisbank"],
+      ["/help", "Helpcentrum"],
+      ["/contact", "Contact"],
+    ],
+  },
+];
 
-  const links = {
-    Platform: [
-      { label: 'Browse Jobs', href: '/jobs' },
-      { label: 'Find Talent', href: '/freelancers' },
-      { label: 'Post a Job', href: '/jobs/post' },
-      { label: 'Pricing', href: '/pricing' },
-    ],
-    Company: [
-      { label: 'About', href: '/about' },
-      { label: 'Blog', href: '/blog' },
-      { label: 'Careers', href: '/careers' },
-      { label: 'Press', href: '/press' },
-    ],
-    Support: [
-      { label: 'Help Center', href: '/help' },
-      { label: 'Trust & Safety', href: '/trust' },
-      { label: 'Privacy Policy', href: '/privacy' },
-      { label: 'Terms of Service', href: '/terms' },
-    ],
-  };
-
+export function Footer() {
   return (
-    <footer className="hidden md:block border-t border-neutral-100 dark:border-neutral-800/80 bg-white dark:bg-neutral-950">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8 lg:gap-12">
-          {/* Brand */}
-          <div className="col-span-2 lg:col-span-2">
-              <Link to="/" className="flex items-center gap-2 mb-4 group w-fit">
-                <img src="/spotrr.png" alt="spotrr.png" className="w-8 h-8 rounded-xl object-contain transition-transform group-hover:scale-105" />
-              </Link>
-            <p className="text-sm text-neutral-500 dark:text-neutral-400 leading-relaxed max-w-xs mb-6">
-              The premium marketplace connecting businesses and individuals with verified freelancers and service providers.
-            </p>
-            <div className="flex items-center gap-3">
-              {[Twitter, Linkedin, Instagram, Globe].map((Icon, i) => (
-                <button key={i} className="w-9 h-9 rounded-xl border border-neutral-200 dark:border-neutral-700 flex items-center justify-center text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:border-neutral-400 dark:hover:border-neutral-500 transition-all duration-200">
-                  <Icon size={15} />
-                </button>
-              ))}
-            </div>
+    <footer className="mt-20 border-t border-line bg-surface">
+      <div className="container-page grid gap-10 py-12 sm:grid-cols-2 lg:grid-cols-4">
+        <div>
+          <div className="flex items-center gap-2 font-extrabold tracking-tight">
+            <LogoMark className="h-7 w-7" /> Jobmarkt
           </div>
-
-          {/* Links */}
-          {Object.entries(links).map(([section, items]) => (
-            <div key={section}>
-              <h4 className="text-xs font-semibold uppercase tracking-widest text-neutral-400 dark:text-neutral-600 mb-4">{section}</h4>
-              <ul className="space-y-3">
-                {items.map(item => (
-                  <li key={item.href}>
-                    <Link to={item.href} className="text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors duration-200">
-                      {item.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-12 pt-8 border-t border-neutral-100 dark:border-neutral-800 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-xs text-neutral-400 dark:text-neutral-600">
-            © {year} Spotr. All rights reserved.
+          <p className="mt-3 max-w-xs text-sm text-muted">
+            Opdrachten plaatsen en werk vinden, lokaal en online. Gratis plaatsen, geen kosten per contact.
           </p>
-          <div className="flex items-center gap-1 text-xs text-neutral-400 dark:text-neutral-600">
-            <span>Made by</span>
-            <span className="text-neutral-700 dark:text-neutral-300 font-semibold">CHAS</span>
-          </div>
+        </div>
+        {columns.map((c) => (
+          <nav key={c.title} aria-label={c.title}>
+            <h2 className="text-sm font-semibold">{c.title}</h2>
+            <ul className="mt-3 space-y-2 text-sm">
+              {c.links.map(([href, label]) => (
+                <li key={href}>
+                  <Link href={href} className="text-ink-soft hover:text-ink hover:underline">{label}</Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        ))}
+      </div>
+      <div className="border-t border-line">
+        <div className="container-page flex flex-col gap-3 py-5 text-sm text-muted sm:flex-row sm:items-center sm:justify-between">
+          <ul className="flex flex-wrap gap-x-4 gap-y-1">
+            <li><Link href="/voorwaarden" className="hover:text-ink hover:underline">Voorwaarden</Link></li>
+            <li><Link href="/privacy" className="hover:text-ink hover:underline">Privacy</Link></li>
+            <li><Link href="/cookies" className="hover:text-ink hover:underline">Cookies</Link></li>
+            <li><Link href="/communityregels" className="hover:text-ink hover:underline">Communityregels</Link></li>
+          </ul>
+          <p>
+            © {new Date().getFullYear()} Jobmarkt · Gebouwd door{" "}
+            <a href={site.maker.url} className="hover:text-ink hover:underline">{site.maker.name}</a>
+          </p>
         </div>
       </div>
     </footer>
