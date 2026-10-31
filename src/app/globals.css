@@ -1,0 +1,178 @@
+@import "tailwindcss";
+
+/*
+  Jobmarkt-huisstijl. Vertrekpunt is Spotr: zwart-wit, ronde vormen, veel lucht
+  en één punt als kenmerk. Jobmarkt voegt een warme papierkleur en één
+  accentkleur (petrol) toe, die alleen voor de punt, links en focus wordt
+  gebruikt. Contrast: tekst op achtergrond ≥ 7:1, accent op wit ≈ 5,9:1.
+*/
+
+@theme {
+  --font-sans: var(--font-schibsted), ui-sans-serif, system-ui, sans-serif;
+
+  --color-paper: #fbfaf7;
+  --color-surface: #ffffff;
+  --color-sunken: #f3f1ec;
+  --color-line: #e5e1d8;
+  --color-line-strong: #cfc9bc;
+  --color-ink: #16181b;
+  --color-ink-soft: #3b3f45;
+  --color-muted: #5d6168;
+  --color-accent: #0e6b6b;
+  --color-accent-strong: #0a5252;
+  --color-accent-soft: #e2f0ee;
+  --color-ok: #17663a;
+  --color-ok-soft: #e4f3ea;
+  --color-warn: #7a4f00;
+  --color-warn-soft: #fbf0d9;
+  --color-danger: #b42318;
+  --color-danger-soft: #fdecea;
+  --color-paid: #5b3c8f;
+  --color-paid-soft: #efe9f8;
+
+  --radius-card: 1rem;
+  --shadow-card: 0 1px 2px rgb(22 24 27 / 0.04), 0 2px 8px rgb(22 24 27 / 0.04);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-paper: #111315;
+    --color-surface: #181a1d;
+    --color-sunken: #0c0d0f;
+    --color-line: #2a2d32;
+    --color-line-strong: #3a3e44;
+    --color-ink: #f2f1ee;
+    --color-ink-soft: #d6d4cf;
+    --color-muted: #a3a6ab;
+    --color-accent: #5cc2bb;
+    --color-accent-strong: #84d6d0;
+    --color-accent-soft: #15302f;
+    --color-ok: #6fd39a;
+    --color-ok-soft: #13291d;
+    --color-warn: #f0c46a;
+    --color-warn-soft: #2d2412;
+    --color-danger: #ff8b80;
+    --color-danger-soft: #3a1714;
+    --color-paid: #c3a8f0;
+    --color-paid-soft: #261d36;
+  }
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-feature-settings: "ss01" 0;
+    line-height: 1.55;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+  ::selection {
+    background: var(--color-accent-soft);
+  }
+  h1, h2, h3 {
+    line-height: 1.15;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
+  }
+  a {
+    text-underline-offset: 3px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  .container-page {
+    @apply mx-auto w-full max-w-6xl px-4 sm:px-6;
+  }
+  .card {
+    @apply rounded-[var(--radius-card)] border border-line bg-surface;
+    box-shadow: var(--shadow-card);
+  }
+  .btn-primary,
+  .btn-secondary,
+  .btn-ghost,
+  .btn-danger {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60;
+  }
+  .btn-primary {
+    @apply bg-ink text-paper hover:bg-ink-soft;
+  }
+  .btn-secondary {
+    @apply border border-line-strong bg-surface text-ink hover:bg-sunken;
+  }
+  .btn-ghost {
+    @apply text-ink-soft hover:bg-sunken;
+  }
+  .btn-danger {
+    @apply border border-danger/40 bg-surface text-danger hover:bg-danger-soft;
+  }
+  .link,
+  .prose-jm a {
+    @apply font-medium text-accent underline decoration-accent/30 hover:decoration-accent;
+  }
+  .label {
+    @apply mb-1.5 block text-sm font-semibold text-ink;
+  }
+  .hint {
+    @apply mt-1 text-sm text-muted;
+  }
+  .input {
+    @apply block min-h-11 w-full rounded-xl border border-line-strong bg-surface px-3.5 py-2.5 text-base text-ink placeholder:text-muted/70 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1 rounded-full border border-line bg-surface px-2.5 py-0.5 text-xs font-medium text-ink-soft;
+  }
+  .eyebrow {
+    @apply text-xs font-semibold tracking-wide text-muted uppercase;
+  }
+  .prose-jm {
+    @apply text-ink-soft;
+  }
+  .prose-jm h2 {
+    @apply mt-10 mb-3 text-xl font-bold text-ink;
+  }
+  .prose-jm h3 {
+    @apply mt-6 mb-2 text-lg font-semibold text-ink;
+  }
+  .prose-jm p,
+  .prose-jm ul,
+  .prose-jm ol {
+    @apply mb-4;
+  }
+  .prose-jm ul {
+    @apply list-disc pl-5;
+  }
+  .prose-jm ol {
+    @apply list-decimal pl-5;
+  }
+  .prose-jm li {
+    @apply mb-1;
+  }
+  .prose-jm table {
+    @apply mb-6 w-full border-collapse text-sm;
+  }
+  .prose-jm th,
+  .prose-jm td {
+    @apply border-b border-line px-2 py-2 text-left align-top;
+  }
+  .prose-jm th {
+    @apply font-semibold text-ink;
+  }
+}

@@ -10,3 +10,4 @@ tools/local-supabase/.run
 .DS_Store
 *.tsbuildinfo
 next-env.d.ts
+tools/local-supabase/bin
