@@ -11,3 +11,7 @@ tools/local-supabase/.run
 *.tsbuildinfo
 next-env.d.ts
 tools/local-supabase/bin
+
+.vercel
+.env*
+supabase/.temp

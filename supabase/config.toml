@@ -1,5 +1,5 @@
-# Supabase-configuratie voor Jobmarkt (project "jobmarkt", nog aan te maken
-# of te koppelen: zie docs/LIVEGANG.md). Wordt toegepast met
+# Supabase-configuratie voor Jobmarkt (project "jobmarkt", ref nqumwjvjtzwseafvvhxt,
+# organisatie jobmarkt, eu-central-1). Wordt toegepast met
 # `supabase config push` na `supabase link`.
 project_id = "jobmarkt"
 
@@ -8,9 +8,9 @@ schemas = ["public"]
 max_rows = 200
 
 [auth]
-# Vervang door het definitieve domein vóór livegang.
-site_url = "https://jobmarkt.example"
-additional_redirect_urls = ["http://localhost:3100"]
+# Tijdelijk het Vercel-adres; vervang door het eigen domein zodra dat er is.
+site_url = "https://jobmarkt.vercel.app"
+additional_redirect_urls = ["https://jobmarkt.vercel.app/**", "http://localhost:3100/**"]
 jwt_expiry = 3600
 enable_refresh_token_rotation = true
 enable_signup = true
