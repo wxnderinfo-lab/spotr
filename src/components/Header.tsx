@@ -3,6 +3,7 @@ import { Bell, MessageSquare, Plus, Menu, User } from "lucide-react";
 import { getMe } from "@/lib/auth";
 import { Logo } from "./Logo";
 import { NavLink } from "./NavLink";
+import { LiveCount } from "./live/LiveProvider";
 
 const mainNav = [
   { href: "/opdrachten", label: "Vind werk" },
@@ -10,16 +11,6 @@ const mainNav = [
   { href: "/categorieen", label: "Categorieën" },
   { href: "/hoe-het-werkt", label: "Hoe het werkt" },
 ];
-
-function Count({ n, label }: { n: number; label: string }) {
-  if (!n) return null;
-  return (
-    <span className="absolute -top-1 -right-1 grid min-w-5 place-items-center rounded-full bg-accent px-1 text-[11px] font-bold text-white">
-      {n > 9 ? "9+" : n}
-      <span className="sr-only"> {label}</span>
-    </span>
-  );
-}
 
 export async function Header() {
   const me = await getMe();
@@ -42,11 +33,11 @@ export async function Header() {
             <>
               <Link href="/berichten" className="btn-ghost relative hidden px-3 sm:inline-flex" aria-label="Berichten">
                 <MessageSquare className="h-5 w-5" aria-hidden />
-                <Count n={me.status.unread_messages} label="ongelezen berichten" />
+                <LiveCount kind="messages" fallback={me.status.unread_messages} label="ongelezen berichten" />
               </Link>
               <Link href="/account/meldingen" className="btn-ghost relative px-3" aria-label="Meldingen">
                 <Bell className="h-5 w-5" aria-hidden />
-                <Count n={me.status.unread_notifications} label="nieuwe meldingen" />
+                <LiveCount kind="notifications" fallback={me.status.unread_notifications} label="nieuwe meldingen" />
               </Link>
               <Link href="/account" className="btn-ghost hidden px-3 sm:inline-flex">
                 <User className="h-5 w-5" aria-hidden />

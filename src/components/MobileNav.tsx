@@ -2,6 +2,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, Search, Plus, MessageSquare, User } from "lucide-react";
+import { LiveCount } from "./live/LiveProvider";
+
+const badge = "absolute -top-1.5 -right-2.5 grid min-w-4 place-items-center rounded-full bg-accent px-1 text-[10px] font-bold text-white";
 
 // Onderbalk op mobiel, zoals in Spotr: de vijf belangrijkste plekken.
 const items = [
@@ -27,7 +30,11 @@ export function MobileNav() {
                 aria-current={active ? "page" : undefined}
                 className={`flex min-h-14 flex-col items-center justify-center gap-0.5 text-[11px] font-medium ${active ? "text-ink" : "text-muted"}`}
               >
-                <Icon className={`h-5 w-5 ${active ? "text-accent" : ""}`} aria-hidden />
+                <span className="relative">
+                  <Icon className={`h-5 w-5 ${active ? "text-accent" : ""}`} aria-hidden />
+                  {href === "/berichten" && <LiveCount kind="messages" fallback={0} label="ongelezen berichten" className={badge} />}
+                  {href === "/account" && <LiveCount kind="notifications" fallback={0} label="nieuwe meldingen" className={badge} />}
+                </span>
                 {label}
               </Link>
             </li>

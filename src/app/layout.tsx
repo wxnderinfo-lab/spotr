@@ -6,6 +6,8 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { MobileNav } from "@/components/MobileNav";
 import { JsonLd } from "@/components/JsonLd";
+import { LiveProvider } from "@/components/live/LiveProvider";
+import { getMe } from "@/lib/auth";
 
 // Schibsted Grotesk: SIL Open Font License 1.1, latin-ext voor ë, é, ï, ĳ.
 // next/font host het lettertype zelf (geen verzoek naar Google bij bezoek).
@@ -35,14 +37,24 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const me = await getMe();
+  const page = (
+    <>
+      <Header />
+      <main id="inhoud" className="pb-20 sm:pb-0">{children}</main>
+      <Footer />
+      <MobileNav />
+    </>
+  );
   return (
     <html lang="nl" className={schibsted.variable}>
       <body className="min-h-dvh font-sans antialiased">
-        <Header />
-        <main id="inhoud" className="pb-20 sm:pb-0">{children}</main>
-        <Footer />
-        <MobileNav />
+        {me ? (
+          <LiveProvider meId={me.id} initial={{ messages: me.status.unread_messages, notifications: me.status.unread_notifications }}>
+            {page}
+          </LiveProvider>
+        ) : page}
         <JsonLd
           data={{
             "@context": "https://schema.org",

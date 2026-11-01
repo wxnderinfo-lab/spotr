@@ -1,12 +1,12 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Phone } from "lucide-react";
+import { Phone } from "lucide-react";
 import { requireMe } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { jobStatusLabel, rel } from "@/lib/format";
 import { publicUrl } from "@/lib/storage";
-import { Avatar, Notice, StatusBadge, jobStatusTone } from "@/components/ui";
+import { Notice, jobStatusTone } from "@/components/ui";
 import { Chat } from "@/components/Chat";
 import { ActionForm } from "@/components/ActionForm";
 import { SubmitButton } from "@/components/forms";
@@ -43,19 +43,17 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
   return (
     <div className="container-page grid max-w-6xl gap-6 py-6 lg:grid-cols-[1fr_20rem]">
       <section className="flex min-h-[70dvh] flex-col" aria-label={`Gesprek met ${other.display_name}`}>
-        <header className="mb-3 flex items-center gap-3 border-b border-line pb-3">
-          <Link href="/berichten" className="btn-ghost px-2" aria-label="Terug naar berichten"><ArrowLeft className="h-5 w-5" aria-hidden /></Link>
-          <Avatar src={publicUrl("avatars", other.avatar_path)} name={other.display_name} size={40} />
-          <div className="min-w-0">
-            <h1 className="truncate font-bold">{other.display_name}</h1>
-            <p className="truncate text-sm text-muted"><Link href={`/account/opdrachten/${job.id}`} className="hover:underline">{job.title}</Link></p>
-          </div>
-          <span className="ml-auto"><StatusBadge label={jobStatusLabel[job.status]} tone={jobStatusTone(job.status)} /></span>
-        </header>
         {blocked ? (
           <Notice tone="warn" title={`Je hebt ${other.display_name} geblokkeerd`}>Jullie kunnen geen berichten meer sturen.</Notice>
         ) : null}
-        <Chat conversationId={id} meId={me.id} initial={messages ?? []} names={{ [me.id]: "Jij", [other.id]: other.display_name }} disabled={!!blocked} />
+        <Chat
+          conversationId={id}
+          meId={me.id}
+          initial={messages ?? []}
+          peer={{ id: other.id, name: other.display_name, avatarUrl: publicUrl("avatars", other.avatar_path) }}
+          job={{ id: job.id, title: job.title, statusLabel: jobStatusLabel[job.status], tone: jobStatusTone(job.status) }}
+          disabled={!!blocked}
+        />
       </section>
 
       <aside className="space-y-4">

@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { timeAgo } from "@/lib/format";
 import { EmptyState, PageHeader } from "@/components/ui";
 import { markAllNotificationsRead } from "@/actions/account";
+import { BrowserNotifyToggle } from "@/components/live/BrowserNotifyToggle";
 
 export const metadata: Metadata = { title: "Meldingen" };
 
@@ -21,6 +22,7 @@ export default async function NotificationsPage() {
           <form action={markAllNotificationsRead}><button type="submit" className="btn-secondary">Alles als gelezen markeren</button></form>
         ) : undefined}
       />
+      <BrowserNotifyToggle />
       {data && data.length > 0 ? (
         <ul className="card divide-y divide-line">
           {data.map((n) => (

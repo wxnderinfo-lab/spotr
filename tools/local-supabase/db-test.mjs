@@ -229,6 +229,31 @@ ok((await one(client, "select public.my_account_status() as s")).s.unread_messag
 ok((await err(pro, "insert into public.messages (conversation_id, sender_id, body, attachment_path) values ($1, $2, 'bijlage', 'ander-gesprek/x.pdf')", [conv, pro]))?.includes("ongeldige_bijlage"),
   "bijlage uit ander gesprek geweigerd");
 
+// live: leesbevestiging, laatst actief, tellers en privé kanalen
+const peerForPro = (await one(pro, "select public.conversation_peer($1) as p", [conv])).p;
+ok(!!peerForPro.last_read_at, "professional ziet tot wanneer de opdrachtgever gelezen heeft");
+ok((await as(pro, "select user_id from public.conversation_reads where conversation_id = $1", [conv])).rows.some((r) => r.user_id === client),
+  "leesmoment van de ander zichtbaar voor deelnemer");
+ok((await as(third, "select user_id from public.conversation_reads")).rows.length === 0, "derde ziet geen leesmomenten");
+ok((await err(third, "select public.conversation_peer($1)", [conv]))?.includes("geen_toegang"), "derde kan status in gesprek niet opvragen");
+ok(peerForPro.last_seen_at === null, "laatst actief leeg zolang de ander niet actief was");
+await as(client, "select public.touch_last_seen()");
+ok(!!(await one(pro, "select public.conversation_peer($1) as p", [conv])).p.last_seen_at, "laatst actief zichtbaar voor gesprekspartner");
+ok((await err(pro, "select last_seen_at from public.profile_private where id = $1", [client])) !== null, "laatst actief niet rechtstreeks leesbaar");
+await as(pro, "insert into public.messages (conversation_id, sender_id, body) values ($1, $2, 'Nog een vraag')", [conv, pro]);
+const counts = (await one(client, "select public.my_live_counts() as c")).c;
+ok(counts.messages === 1 && counts.notifications >= 1, "live tellers voor berichten en meldingen");
+ok((await one(null, "select public.my_live_counts() as c").catch(() => ({ c: null }))).c === null, "anoniem krijgt geen tellers");
+ok((await one(pro, "select public.can_use_realtime_topic($1) as r", [`gesprek:${conv}`])).r === true, "deelnemer mag het privé gesprekskanaal gebruiken");
+ok((await one(third, "select public.can_use_realtime_topic($1) as r", [`gesprek:${conv}`])).r === false, "derde mag het gesprekskanaal niet gebruiken");
+ok((await one(pro, "select public.can_use_realtime_topic('gesprek:geen-uuid') as r")).r === false, "ongeldig kanaal geweigerd zonder fout");
+ok((await one(pro, "select public.can_use_realtime_topic('meldingen') as r")).r === false, "onbekend kanaal geweigerd");
+await as(client, "insert into public.blocks (blocker_id, blocked_id) values ($1, $2)", [client, pro]);
+ok((await one(pro, "select public.can_use_realtime_topic($1) as r", [`gesprek:${conv}`])).r === false, "na blokkeren geen typ- of aanwezigheidskanaal");
+ok((await one(pro, "select public.conversation_peer($1) as p", [conv])).p.last_seen_at === null, "na blokkeren geen laatst actief");
+await su("delete from public.blocks where blocker_id = $1 and blocked_id = $2", [client, pro]);
+await as(client, "select public.mark_conversation_read($1)", [conv]);
+
 ok((await err(third, "select public.share_phone($1, '0612345678')", [conv]))?.includes("geen_toegang"), "derde kan geen nummer delen in gesprek");
 await as(pro, "select public.share_phone($1, '06 12 34 56 78')", [conv]);
 const shared = await as(client, "select phone from public.contact_shares where conversation_id = $1", [conv]);

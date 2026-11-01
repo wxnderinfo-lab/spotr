@@ -176,3 +176,24 @@
     @apply font-semibold text-ink;
   }
 }
+
+/* Typ-indicator in de chat: drie stippen, stil bij 'minder beweging'. */
+@keyframes jm-typing {
+  0%, 60%, 100% { opacity: 0.25; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-2px); }
+}
+.typing-dot {
+  animation: jm-typing 1.2s infinite ease-in-out;
+}
+.typing-dot:nth-child(2) { animation-delay: 0.15s; }
+.typing-dot:nth-child(3) { animation-delay: 0.3s; }
+@keyframes jm-toast-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+.toast-in {
+  animation: jm-toast-in 0.18s ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .typing-dot, .toast-in { animation: none; }
+}

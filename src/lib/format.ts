@@ -35,6 +35,13 @@ export function timeAgo(d: string | Date) {
   return formatDate(d);
 }
 
+/** Online-status van een gesprekspartner: 'Online' of 'Laatst actief …'. */
+export function lastSeenLabel(d: string | null, onlineMs = 150_000) {
+  if (!d) return null;
+  if (Date.now() - new Date(d).getTime() < onlineMs) return "Online";
+  return `Laatst actief ${timeAgo(d)}`;
+}
+
 export const timingLabel: Record<string, string> = {
   zo_snel_mogelijk: "Zo snel mogelijk",
   voor_datum: "Vóór een datum",

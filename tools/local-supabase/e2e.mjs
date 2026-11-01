@@ -249,12 +249,18 @@ try {
   ok(await waitForText(client.page, "Dinsdag om 9 uur"), "opdrachtgever stuurt bericht");
   await go(pro.page, convPath);
   ok(await waitForText(pro.page, "Dinsdag om 9 uur"), "professional ziet het bericht");
+  ok(await waitForText(client.page, "Gelezen", 20000), "opdrachtgever ziet dat het bericht gelezen is");
+  ok(await waitForText(pro.page, "Online", 20000), "professional ziet dat de opdrachtgever online is");
   await pro.page.type("#phone", "06 12345678");
   await clickByText(pro.page, "Nummer delen");
   ok(await waitForText(pro.page, "Je deelt 0612345678"), "professional deelt vrijwillig telefoonnummer");
   await pro.page.type("#bericht", "Top, tot dinsdag!");
   await pro.page.click('button[aria-label="Versturen"]');
   await sleep(500);
+  ok(await waitForText(pro.page, "Verzonden"), "eigen nieuw bericht staat op 'Verzonden' tot de ander het leest");
+  await go(client.page, "/account");
+  const badge = await client.page.waitForFunction(() => document.querySelector('a[aria-label="Berichten"]')?.textContent.includes("ongelezen berichten"), { timeout: 15000 }).then(() => true).catch(() => false);
+  ok(badge, "berichtenteller in de header bij een nieuw bericht");
   await go(client.page, convPath);
   const tel = await client.page.$eval('a[href^="tel:"]', (a) => a.getAttribute("href")).catch(() => null);
   ok(tel === "tel:+31612345678", "opdrachtgever krijgt belknop (tel:-link) met gedeeld nummer");
