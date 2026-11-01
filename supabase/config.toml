@@ -18,7 +18,8 @@ minimum_password_length = 8
 password_requirements = "letters_digits"
 
 [auth.rate_limit]
-email_sent = 4
+# Mails per uur voor het hele project (alleen instelbaar met eigen SMTP).
+email_sent = 100
 sign_in_sign_ups = 30
 token_verifications = 30
 
@@ -28,6 +29,18 @@ enable_confirmations = true
 double_confirm_changes = true
 secure_password_change = true
 max_frequency = "60s"
+
+# Eigen SMTP via Resend. Tijdelijk verzonden vanaf het geverifieerde domein
+# chas.nu tot Jobmarkt een eigen domein heeft; de sleutel komt uit de
+# omgeving (RESEND_API_KEY) en staat nooit in de repo.
+[auth.email.smtp]
+enabled = true
+host = "smtp.resend.com"
+port = 465
+user = "resend"
+pass = "env(RESEND_API_KEY)"
+admin_email = "noreply@chas.nu"
+sender_name = "Jobmarkt"
 
 [auth.email.template.confirmation]
 subject = "Bevestig je e-mailadres voor Jobmarkt"
