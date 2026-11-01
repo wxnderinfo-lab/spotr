@@ -15,6 +15,9 @@ function authError(msg: string) {
   if (/email not confirmed/i.test(msg)) return "Bevestig eerst je e-mailadres via de link in je mail.";
   if (/rate limit|too many/i.test(msg)) return "Te veel pogingen. Wacht even en probeer het opnieuw.";
   if (/weak|password should/i.test(msg)) return "Kies een sterker wachtwoord van minimaal 8 tekens.";
+  // Onbekende fouten (zoals een mislukte bevestigingsmail) in de serverlogs, zonder e-mailadres.
+  console.error("auth error:", msg);
+  if (/sending .*email|smtp/i.test(msg)) return "We konden de bevestigingsmail niet versturen. Probeer het over een paar minuten opnieuw.";
   return "Dat lukte niet. Probeer het opnieuw.";
 }
 
