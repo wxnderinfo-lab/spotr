@@ -7,7 +7,8 @@ Status per onderdeel.
 - Website op https://jobmarkt.vercel.app (Vercel-project `jobmarkt`, functies in `fra1`). Deploy via `vercel deploy --prod` vanuit de worktree; GitHub is nog niet aan Vercel gekoppeld (de Vercel GitHub-app heeft geen toegang tot `wxnderinfo-lab`).
 - Supabase-project `jobmarkt` (ref `nqumwjvjtzwseafvvhxt`, organisatie jobmarkt op Pro, `eu-central-1`). Alle zes migraties toegepast, auth-config en Nederlandse mailtemplates gepusht.
 - Env-variabelen in Vercel (productie): Supabase-URL en -sleutels, `NEXT_PUBLIC_SITE_URL`, `CRON_SECRET`, `BILLING_ENABLED=false`. Het databasewachtwoord staat lokaal in `.env.supabase-db` (genegeerd door git).
-- Nog niet ingevuld: juridische exploitant, eigen SMTP, Stripe, Resend.
+- Auth-mail via Resend-SMTP (`smtp.resend.com`, afzender `Jobmarkt <noreply@chas.nu>`, tijdelijk de chas.nu-sleutel). Op 1 november getest met een echte aanmelding: mail ontvangen, account bevestigd. `RESEND_API_KEY` en `EMAIL_FROM` staan ook in Vercel voor app-mails.
+- Nog niet ingevuld: juridische exploitant, Stripe, eigen domein en eigen Resend-sleutel/afzender.
 
 ## Werkend en lokaal getest
 
