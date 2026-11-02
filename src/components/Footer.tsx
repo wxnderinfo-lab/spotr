@@ -65,6 +65,7 @@ export function Footer() {
             <li><Link href="/privacy" className="hover:text-ink hover:underline">Privacy</Link></li>
             <li><Link href="/cookies" className="hover:text-ink hover:underline">Cookies</Link></li>
             <li><Link href="/communityregels" className="hover:text-ink hover:underline">Communityregels</Link></li>
+            <li><Link href="/fotoverantwoording" className="hover:text-ink hover:underline">Foto’s</Link></li>
           </ul>
           <p>
             © {new Date().getFullYear()} Jobmarkt · Gebouwd door{" "}

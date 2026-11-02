@@ -1,6 +1,7 @@
 import "server-only";
 import { cache } from "react";
 import { createClient, createPublicClient } from "@/lib/supabase/server";
+import { photoFor, type Photo } from "@/config/photos";
 
 export type Category = {
   id: number;
@@ -38,6 +39,13 @@ export async function categoryPath(slug: string) {
   if (!cat) return null;
   const parent = cat.parent_id ? all.find((c) => c.id === cat.parent_id) ?? null : null;
   return { cat, parent, href: parent ? `/categorieen/${parent.slug}/${cat.slug}` : `/categorieen/${cat.slug}` };
+}
+
+/** Categoriefoto voor een (sub)categorie-slug, via de hoofdcategorie. */
+export async function categoryPhoto(slug: string | null | undefined): Promise<Photo | null> {
+  if (!slug) return null;
+  const path = await categoryPath(slug);
+  return photoFor(slug, path?.parent?.slug);
 }
 
 export type Place = { id: number; name: string; slug: string; municipality: string; province: string };

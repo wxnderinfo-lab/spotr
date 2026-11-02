@@ -38,7 +38,9 @@ async function newUser(label, { mobile = false } = {}) {
   page.on("pageerror", (e) => console.log(`    [${label} pageerror] ${e.message.slice(0, 160)}`));
   return { ctx, page, label };
 }
-const go = (page, path) => page.goto(APP + path, { waitUntil: "networkidle0" });
+// networkidle2: lokaal is er geen Realtime-server, dus de websocket blijft
+// opnieuw verbinden en wordt de pagina nooit helemaal 'stil'.
+const go = (page, path) => page.goto(APP + path, { waitUntil: "networkidle2" });
 async function shot(page, name) {
   await page.screenshot({ path: join(shots, `${name}.png`), fullPage: true });
 }
@@ -64,6 +66,11 @@ async function clickByText(page, label) {
   ]);
 }
 const text = (page) => page.evaluate(() => document.body.innerText);
+// Fototegel van een hoofdcategorie openen en ‘Alles in …’ aanvinken.
+async function pickCategory(page, name) {
+  await page.$$eval("#categorieen button[aria-controls]", (els, n) => els.find((b) => b.textContent.includes(n))?.click(), name);
+  await page.$$eval("#categorieen label", (els, n) => els.find((l) => l.textContent.includes(`Alles in ${n.toLowerCase()}`))?.click(), name);
+}
 async function waitForText(page, needle, timeout = 15000) {
   const start = Date.now();
   while (Date.now() - start < timeout) {
@@ -186,14 +193,38 @@ try {
   await pro.page.type("#hourly_rate", "42");
   await submitAndWait(pro.page, 'form:has(#bio) button[type="submit"]');
   ok(await waitForText(pro.page, "Profiel opgeslagen"), "profiel opgeslagen");
-  const klusId = await pro.page.$$eval('input[name="categorie"]', (els) => els.find((e) => e.closest("label")?.textContent?.includes("Klussen & bouw"))?.value);
-  await pro.page.click(`input[name="categorie"][value="${klusId}"]`);
+  ok((await pro.page.$$eval("#categorieen button[aria-controls] img", (els) => els.length)) >= 12, "categorieën als fototegels");
+  await pickCategory(pro.page, "Klussen & bouw");
+  ok(await waitForText(pro.page, "1 van 10"), "teller toont 1 van 10 gekozen");
   await submitAndWait(pro.page, '#categorieen button[type="submit"]');
   ok(await waitForText(pro.page, "Categorieën opgeslagen"), "categorieën opgeslagen");
   await pro.page.type("#pf-video", "https://www.youtube.com/watch?v=abcdefghijk");
   await pro.page.type("#pf-title", "Trappenhuis Almere Haven");
   await submitAndWait(pro.page, '#portfolio button[type="submit"]');
   ok(await waitForText(pro.page, "Toegevoegd aan je portfolio"), "portfolio-item met videolink toegevoegd");
+  // dienst met drie pakketten
+  await pro.page.type("#sv-title", "Woonkamer schilderen, muren en plafond");
+  await pro.page.select("#sv-cat", await pro.page.$$eval("#sv-cat option", (os) => os.find((o) => o.textContent.includes("Schilderen"))?.value));
+  await pro.page.type("#sv-desc", "Muren en plafond in twee lagen, inclusief afplakken, kitten van naden en opruimen na afloop.");
+  await pro.page.$$eval("label", (ls) => ls.find((l) => l.textContent.includes("Pakketten (max. 3)"))?.click());
+  await pro.page.waitForSelector("#pk-p-0");
+  await pro.page.$$eval("button", (bs) => bs.find((b) => b.textContent.includes("Pakket toevoegen"))?.click());
+  await pro.page.waitForSelector("#pk-p-2");
+  for (const [i, p] of [[0, "250"], [1, "395"], [2, "600"]]) await pro.page.type(`#pk-p-${i}`, p);
+  await pro.page.type("#pk-d-1", "Muren en plafond");
+  await submitAndWait(pro.page, '#diensten button[type="submit"]');
+  ok(await waitForText(pro.page, "Dienst gepubliceerd"), "dienst met drie pakketten gepubliceerd");
+  const dienstHref = await pro.page.$eval('#diensten a[href^="/diensten/"]', (a) => a.getAttribute("href")).catch(() => null);
+  ok((await text(pro.page)).replace(/\s/g, " ").includes("Vanaf € 250"), "dienstkaart toont ‘vanaf’ het goedkoopste pakket");
+  if (dienstHref) {
+    await go(pro.page, dienstHref);
+    const t = (await text(pro.page)).replace(/\s/g, " ");
+    // pakketnamen staan in hoofdletters (CSS), innerText geeft ze zo terug
+    ok(t.includes("Pakketten") && /compleet/i.test(t) && t.includes("€ 395"), "dienstpagina toont de drie pakketten");
+    const ld = await pro.page.$$eval('script[type="application/ld+json"]', (ss) => ss.map((s) => s.textContent).join(""));
+    ok(ld.includes("AggregateOffer") && ld.includes("\"lowPrice\":\"250.00\""), "structured data met prijsrange van de pakketten");
+    await go(pro.page, "/account/profiel");
+  }
 
   await go(pro.page, jobUrl);
   await pro.page.type("#vraag", "Mag ik even bellen? 06-12345678");
@@ -214,8 +245,7 @@ try {
   const pro2 = await newUser("tweede professional");
   const pro2Email = `pro2-${run}@test.local`;
   await signUp(pro2, { name: "Lotte Klus", email: pro2Email, birthdate: yearsAgo(41), role: "professional", username: `lotte-${run}` });
-  const klusId2 = await pro2.page.$$eval('input[name="categorie"]', (els) => els.find((e) => e.closest("label")?.textContent?.includes("Klussen & bouw"))?.value);
-  await pro2.page.click(`input[name="categorie"][value="${klusId2}"]`);
+  await pickCategory(pro2.page, "Klussen & bouw");
   await submitAndWait(pro2.page, '#categorieen button[type="submit"]');
   await go(pro2.page, jobUrl);
   ok((await text(pro2.page)).includes("0 van 5 gratis voorstellen"), "gratis account ziet maandlimiet (0 van 5)");

@@ -4,13 +4,15 @@ import { notFound } from "next/navigation";
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { site } from "@/config/site";
-import { categoryPath } from "@/lib/data";
+import { categoryPath, categoryPhoto } from "@/lib/data";
 import { euro, rel, workModeLabel } from "@/lib/format";
 import { publicUrl } from "@/lib/storage";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { Avatar, Stars } from "@/components/ui";
 import { ReportButton } from "@/components/ReportButton";
 import { JsonLd } from "@/components/JsonLd";
+import { ServicePackages, type ServicePackage } from "@/components/ServiceCard";
+import Image from "next/image";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -18,7 +20,7 @@ const getService = cache(async (slug: string) => {
   const supabase = await createClient();
   const { data } = await supabase
     .from("services")
-    .select(`id, slug, title, description, price_type, price_cents, delivery_note, work_mode, status, updated_at,
+    .select(`id, slug, title, description, price_type, price_cents, delivery_note, work_mode, status, updated_at, cover_path, packages,
       category:categories(slug, name),
       provider:profiles!services_provider_id_fkey(id, username, display_name, avatar_path, headline, provider_type, place:places(name))`)
     .eq("slug", slug)
@@ -52,15 +54,29 @@ export default async function ServicePage({ params }: Props) {
   const supabase = await createClient();
   const { data: stats } = await supabase.rpc("profile_stats", { p_profile: s.provider.id });
   const cat = await categoryPath(s.category.slug);
+  const photo = await categoryPhoto(s.category.slug);
+  const cover = publicUrl("portfolio", s.cover_path);
+  const packages = (s.packages ?? []) as ServicePackage[];
 
   return (
     <div className="container-page max-w-4xl py-8">
       <Breadcrumbs items={[{ name: "Categorieën", href: "/categorieen" }, ...(cat ? [{ name: cat.cat.name, href: cat.href }] : []), { name: s.title }]} />
+      <div className="relative mb-6 aspect-[21/9] overflow-hidden rounded-2xl bg-sunken">
+        {cover ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={cover} alt={`Werk van ${s.provider.display_name}`} className="h-full w-full object-cover" />
+        ) : photo ? (
+          <Image src={photo.src} alt={photo.alt} fill priority sizes="(min-width: 896px) 896px, 100vw" className="object-cover" />
+        ) : null}
+      </div>
       <h1 className="text-3xl font-extrabold">{s.title}</h1>
       <p className="mt-2 text-lg font-semibold">{priceText(s)}</p>
       <p className="text-sm text-muted">{workModeLabel[s.work_mode]}{s.delivery_note ? ` · ${s.delivery_note}` : ""}</p>
       <div className="mt-6 grid gap-8 md:grid-cols-[1fr_18rem]">
-        <div className="whitespace-pre-line text-ink-soft">{s.description}</div>
+        <div>
+          <div className="whitespace-pre-line text-ink-soft">{s.description}</div>
+          <ServicePackages packages={packages} categorySlug={s.category.slug} />
+        </div>
         <aside className="card h-fit p-5">
           <div className="flex items-center gap-3">
             <Avatar src={publicUrl("avatars", s.provider.avatar_path)} name={s.provider.display_name} size={48} />
@@ -85,9 +101,11 @@ export default async function ServicePage({ params }: Props) {
           url: `${site.url}/diensten/${s.slug}`,
           areaServed: s.work_mode === "online" ? { "@type": "Country", name: "Nederland" } : s.provider.place?.name,
           provider: { "@type": "Person", name: s.provider.display_name, url: `${site.url}/professionals/${s.provider.username}` },
-          ...(s.price_cents && s.price_type !== "op_aanvraag"
-            ? { offers: { "@type": "Offer", priceCurrency: "EUR", price: (s.price_cents / 100).toFixed(2) } }
-            : {}),
+          ...(packages.length > 1
+            ? { offers: { "@type": "AggregateOffer", priceCurrency: "EUR", offerCount: packages.length, lowPrice: (Math.min(...packages.map((p) => p.price_cents)) / 100).toFixed(2), highPrice: (Math.max(...packages.map((p) => p.price_cents)) / 100).toFixed(2) } }
+            : s.price_cents && s.price_type !== "op_aanvraag"
+              ? { offers: { "@type": "Offer", priceCurrency: "EUR", price: (s.price_cents / 100).toFixed(2) } }
+              : {}),
         }}
       />
     </div>

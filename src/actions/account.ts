@@ -147,17 +147,51 @@ const serviceSchema = z.object({
   work_mode: z.enum(["op_locatie", "online", "beide"]),
 });
 
+const packageSchema = z.object({
+  name: z.string().trim().min(2, "Pakket: geef elk pakket een naam.").max(40),
+  price: optInt(1, 100000).refine((n) => n !== null, "Pakket: vul bij elk pakket een prijs in."),
+  description: z.string().trim().max(300).default(""),
+  delivery: z.string().trim().max(60).default(""),
+});
+
+/** Pakketten uit pkg_<veld>_<0..2>; lege rijen tellen niet mee. */
+function readPackages(formData: FormData) {
+  const rows = [0, 1, 2]
+    .map((i) => ({
+      name: String(formData.get(`pkg_name_${i}`) ?? ""),
+      price: String(formData.get(`pkg_price_${i}`) ?? ""),
+      description: String(formData.get(`pkg_desc_${i}`) ?? ""),
+      delivery: String(formData.get(`pkg_delivery_${i}`) ?? ""),
+    }))
+    .filter((r) => r.name.trim() || r.price.trim());
+  const out: { name: string; price_cents: number; description: string; delivery: string }[] = [];
+  for (const r of rows) {
+    const p = packageSchema.safeParse(r);
+    if (!p.success) return { error: p.error.issues[0].message };
+    out.push({ name: p.data.name, price_cents: Math.round((p.data.price ?? 0) * 100), description: p.data.description, delivery: p.data.delivery });
+  }
+  return { packages: out };
+}
+
 export async function addService(_: FormState, formData: FormData): Promise<FormState> {
   const parsed = serviceSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { error: parsed.error.issues[0].message };
   const v = parsed.data;
-  if (v.price_type !== "op_aanvraag" && v.price === null) return { error: "Vul een prijs in of kies ‘op aanvraag’." };
+  const pk = readPackages(formData);
+  if ("error" in pk) return { error: pk.error };
+  const usePackages = pk.packages.length > 0;
+  if (!usePackages && v.price_type !== "op_aanvraag" && v.price === null) return { error: "Vul een prijs in, kies ‘op aanvraag’ of maak pakketten." };
   const { supabase, user } = await userClient();
   if (!user) return { error: "Log eerst in." };
+  const cover = String(formData.get("cover_path") ?? "") || null;
+  if (cover && !cover.startsWith(`${user.id}/`)) return { error: "Die omslagfoto hoort niet bij jouw account." };
+  // met pakketten is de dienstprijs 'vanaf' het goedkoopste pakket
+  const priceType = usePackages ? (pk.packages.length > 1 ? "vanaf" : "vast") : v.price_type;
+  const priceCents = usePackages ? Math.min(...pk.packages.map((p) => p.price_cents)) : v.price_type === "op_aanvraag" ? null : Math.round((v.price ?? 0) * 100);
   const slug = `${v.title.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60)}-${crypto.randomUUID().slice(0, 6)}`;
   const { error } = await supabase.from("services").insert({
-    provider_id: user.id, category_id: v.category_id, slug, title: v.title, description: v.description, price_type: v.price_type,
-    price_cents: v.price_type === "op_aanvraag" ? null : Math.round((v.price ?? 0) * 100), delivery_note: v.delivery_note, work_mode: v.work_mode, status: "actief",
+    provider_id: user.id, category_id: v.category_id, slug, title: v.title, description: v.description, price_type: priceType,
+    price_cents: priceCents, delivery_note: v.delivery_note, work_mode: v.work_mode, status: "actief", cover_path: cover, packages: pk.packages,
   });
   if (error) return { error: errorMessage(error) };
   revalidatePath("/account/profiel");

@@ -13,6 +13,9 @@ import { Avatar, Stars, VerifiedKvk, StatusBadge } from "@/components/ui";
 import { ReportButton } from "@/components/ReportButton";
 import { FavoriteButton } from "@/components/FavoriteButton";
 import { JsonLd } from "@/components/JsonLd";
+import { ServiceCard } from "@/components/ServiceCard";
+import { categoryPhoto } from "@/lib/data";
+import Image from "next/image";
 
 type Props = { params: Promise<{ username: string }> };
 
@@ -56,21 +59,37 @@ export default async function ProfilePage({ params }: Props) {
     supabase.rpc("profile_stats", { p_profile: p.id }),
     supabase.rpc("get_reviews", { p_profile: p.id, p_limit: 20, p_offset: 0 }),
     supabase.from("portfolio_items").select("id, title, description, image_path, video_url").eq("profile_id", p.id).order("sort_order"),
-    supabase.from("services").select("id, slug, title, price_type, price_cents, work_mode").eq("provider_id", p.id).eq("status", "actief").order("created_at"),
+    supabase.from("services").select("id, slug, title, price_type, price_cents, work_mode, cover_path, packages, category:categories(slug)").eq("provider_id", p.id).eq("status", "actief").order("created_at"),
     supabase.from("profile_categories").select("category:categories(slug, name, parent_id)").eq("profile_id", p.id),
     supabase.rpc("public_age", { p_user: p.id }),
     me ? supabase.from("favorites").select("target_id").match({ user_id: me.id, target_type: "professional", target_id: p.id }).maybeSingle().then((r) => !!r.data) : false,
   ]);
   const providerReviews = ((reviews ?? []) as { id: string; reviewee_role: string; rating: number; rating_communication: number | null; rating_quality: number | null; rating_reliability: number | null; body: string; response: string | null; job_title: string; job_category: string; reviewer_name: string; created_at: string; completed_at: string }[]).filter((r) => r.reviewee_role === "professional");
   const categories = (cats ?? []).map((c) => rel(c.category) as { slug: string; name: string } | null).filter(Boolean) as { slug: string; name: string }[];
+  const serviceCards = await Promise.all((services ?? []).map(async (s) => ({ s, photo: await categoryPhoto((rel(s.category) as { slug: string } | null)?.slug) })));
+  // banner: eigen omslagfoto van een dienst, anders de foto van de eerste categorie
+  const bannerCover = (services ?? []).find((s) => s.cover_path)?.cover_path ?? null;
+  const bannerPhoto = bannerCover ? null : await categoryPhoto(categories[0]?.slug);
 
   return (
     <div className="container-page py-8">
       <Breadcrumbs items={[{ name: "Professionals", href: "/professionals" }, { name: p.display_name }]} />
       <div className="grid gap-8 lg:grid-cols-[1fr_20rem]">
         <div>
-          <header className="flex flex-col gap-5 sm:flex-row sm:items-center">
-            <Avatar src={publicUrl("avatars", p.avatar_path)} name={p.display_name} size={96} />
+          {(bannerCover || bannerPhoto) && (
+            <div className="relative aspect-[3/1] overflow-hidden rounded-2xl bg-sunken sm:aspect-[4/1]">
+              {bannerCover ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={publicUrl("portfolio", bannerCover) ?? ""} alt="" className="h-full w-full object-cover" />
+              ) : bannerPhoto ? (
+                <Image src={bannerPhoto.src} alt="" fill priority sizes="(min-width: 1024px) 800px, 100vw" className="object-cover" />
+              ) : null}
+            </div>
+          )}
+          <header className={`relative flex flex-col gap-4 sm:flex-row ${bannerCover || bannerPhoto ? "px-4 sm:items-end" : "sm:items-center"}`}>
+            <span className={bannerCover || bannerPhoto ? "-mt-12 w-fit shrink-0 rounded-full bg-paper p-1" : ""}>
+              <Avatar src={publicUrl("avatars", p.avatar_path)} name={p.display_name} size={96} />
+            </span>
             <div>
               <h1 className="text-3xl font-extrabold">{p.display_name}</h1>
               {p.headline && <p className="mt-1 text-lg text-ink-soft">{p.headline}</p>}
@@ -92,6 +111,17 @@ export default async function ProfilePage({ params }: Props) {
             )}
           </section>
 
+          {serviceCards.length > 0 && (
+            <section className="mt-10" aria-labelledby="diensten">
+              <h2 id="diensten" className="mb-3 text-xl font-bold">Wat {p.display_name.split(" ")[0]} aanbiedt</h2>
+              <ul className="grid gap-4 sm:grid-cols-2">
+                {serviceCards.map(({ s, photo }) => (
+                  <li key={s.id}><ServiceCard s={s} fallback={photo} /></li>
+                ))}
+              </ul>
+            </section>
+          )}
+
           {portfolio && portfolio.length > 0 && (
             <section className="mt-10" aria-labelledby="portfolio">
               <h2 id="portfolio" className="mb-3 text-xl font-bold">Portfolio</h2>
@@ -111,24 +141,6 @@ export default async function ProfilePage({ params }: Props) {
                         </a>
                       )}
                     </div>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
-
-          {services && services.length > 0 && (
-            <section className="mt-10" aria-labelledby="diensten">
-              <h2 id="diensten" className="mb-3 text-xl font-bold">Diensten</h2>
-              <ul className="grid gap-3">
-                {services.map((s) => (
-                  <li key={s.id}>
-                    <Link href={`/diensten/${s.slug}`} className="card flex items-center justify-between gap-4 p-4 hover:border-line-strong">
-                      <span className="font-semibold">{s.title}</span>
-                      <span className="shrink-0 text-sm text-ink-soft">
-                        {s.price_type === "op_aanvraag" ? "Prijs op aanvraag" : `${s.price_type === "vanaf" ? "Vanaf " : ""}${euro(s.price_cents)}${s.price_type === "uur" ? " p/u" : ""}`}
-                      </span>
-                    </Link>
                   </li>
                 ))}
               </ul>

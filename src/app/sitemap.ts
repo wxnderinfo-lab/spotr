@@ -22,7 +22,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ]);
   const withContent = new Set([...(catJobs.data ?? []), ...(catPros.data ?? [])].map((r) => r.category_id as number));
 
-  const staticPages = ["/", "/opdrachten", "/professionals", "/categorieen", "/opdracht-plaatsen", "/hoe-het-werkt", "/prijzen", "/kennisbank", "/help", "/contact", "/over-jobmarkt", "/communityregels", "/voorwaarden", "/privacy", "/cookies"];
+  const staticPages = ["/", "/opdrachten", "/professionals", "/categorieen", "/opdracht-plaatsen", "/hoe-het-werkt", "/prijzen", "/kennisbank", "/help", "/contact", "/over-jobmarkt", "/communityregels", "/voorwaarden", "/privacy", "/cookies", "/fotoverantwoording"];
   return [
     ...staticPages.map((p) => ({ url: u(p), changeFrequency: "weekly" as const })),
     ...tree.map((p) => ({ url: u(`/categorieen/${p.slug}`) })),

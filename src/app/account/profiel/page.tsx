@@ -2,15 +2,18 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { requireMe } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { getCategoryTree } from "@/lib/data";
-import { euro, rel } from "@/lib/format";
+import { categoryPhoto, getCategoryTree } from "@/lib/data";
+import { rel } from "@/lib/format";
 import { publicUrl } from "@/lib/storage";
 import { ActionForm } from "@/components/ActionForm";
 import { SubmitButton } from "@/components/forms";
 import { Notice, PageHeader, StatusBadge } from "@/components/ui";
 import { PlaceInput } from "@/components/PlaceInput";
 import { AvatarEditor, PortfolioAdd } from "@/components/ProfileUploads";
-import { addService, deletePortfolioItem, requestKvkCheck, setServiceStatus, updateCategories, updateProfile } from "@/actions/account";
+import { CategoryPicker } from "@/components/CategoryPicker";
+import { ServiceForm } from "@/components/ServiceForm";
+import { ServiceCard } from "@/components/ServiceCard";
+import { deletePortfolioItem, requestKvkCheck, setServiceStatus, updateCategories, updateProfile } from "@/actions/account";
 
 export const metadata: Metadata = { title: "Profiel en portfolio" };
 
@@ -24,12 +27,15 @@ export default async function EditProfilePage({ searchParams }: { searchParams: 
     supabase.from("profiles").select("*, place:places(name, slug)").eq("id", me.id).single(),
     supabase.from("profile_categories").select("category_id").eq("profile_id", me.id),
     supabase.from("portfolio_items").select("id, title, image_path, video_url").eq("profile_id", me.id).order("sort_order"),
-    supabase.from("services").select("id, slug, title, price_type, price_cents, status").eq("provider_id", me.id).neq("status", "verwijderd").order("created_at"),
+    supabase.from("services").select("id, slug, title, price_type, price_cents, work_mode, status, cover_path, packages, category:categories(slug)").eq("provider_id", me.id).neq("status", "verwijderd").order("created_at"),
     supabase.from("verifications").select("status, created_at, note").eq("profile_id", me.id).order("created_at", { ascending: false }).limit(1).maybeSingle(),
     getCategoryTree(),
   ]);
   const place = rel(p.place) as { name: string; slug: string } | null;
   const chosen = new Set((myCats ?? []).map((c) => c.category_id as number));
+  const serviceCards = await Promise.all(
+    (services ?? []).map(async (s) => ({ s, photo: await categoryPhoto((rel(s.category) as { slug: string } | null)?.slug) })),
+  );
 
   return (
     <>
@@ -81,22 +87,11 @@ export default async function EditProfilePage({ searchParams }: { searchParams: 
         </section>
 
         <section id="categorieen" className="card scroll-mt-24 p-5 sm:p-6" aria-labelledby="cat-titel">
-          <h2 id="cat-titel" className="text-lg font-bold">Categorieën</h2>
-          <p className="mt-1 text-sm text-ink-soft">Kies maximaal 10. Je kunt reageren op opdrachten in deze categorieën (een hoofdcategorie telt voor alle onderdelen). Categorieën met 18+ zijn voor volwassenen.</p>
-          <ActionForm action={updateCategories} className="mt-4">
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {tree.map((parent) => (
-                <fieldset key={parent.id}>
-                  <legend className="font-semibold"><label className="flex items-center gap-2"><input type="checkbox" name="categorie" value={parent.id} defaultChecked={chosen.has(parent.id)} className="h-4 w-4 accent-[var(--color-accent)]" />{parent.name} (alles)</label></legend>
-                  <div className="mt-1.5 space-y-1 pl-6 text-sm">
-                    {parent.children.map((c) => (
-                      <label key={c.id} className="flex items-center gap-2"><input type="checkbox" name="categorie" value={c.id} defaultChecked={chosen.has(c.id)} disabled={me.status.is_minor && c.min_age === 18} className="h-4 w-4 accent-[var(--color-accent)]" />{c.name}{c.min_age === 18 && <span className="text-xs text-muted">18+</span>}</label>
-                    ))}
-                  </div>
-                </fieldset>
-              ))}
-            </div>
-            <div className="mt-4"><SubmitButton>Categorieën opslaan</SubmitButton></div>
+          <h2 id="cat-titel" className="text-lg font-bold">Wat doe je?</h2>
+          <p className="mt-1 mb-4 text-sm text-ink-soft">Je ziet en reageert op opdrachten in wat je hier kiest. Opdrachtgevers vinden je er ook op.</p>
+          <ActionForm action={updateCategories}>
+            <CategoryPicker tree={tree} initial={[...chosen]} isMinor={me.status.is_minor} />
+            <div className="mt-5"><SubmitButton>Opslaan</SubmitButton></div>
           </ActionForm>
         </section>
 
@@ -120,39 +115,26 @@ export default async function EditProfilePage({ searchParams }: { searchParams: 
         </section>
 
         <section id="diensten" className="scroll-mt-24" aria-labelledby="dienst-titel">
-          <h2 id="dienst-titel" className="mb-1 text-lg font-bold">Diensten</h2>
-          <p className="mb-3 text-sm text-ink-soft">Vaste diensten met een duidelijke prijs, bijvoorbeeld ‘Logo-ontwerp met 2 correctierondes’. Ze staan op je profiel en een eigen pagina.</p>
-          {services && services.length > 0 && (
-            <ul className="card mb-4 divide-y divide-line">
-              {services.map((s) => (
-                <li key={s.id} className="flex flex-col gap-2 p-4 sm:flex-row sm:items-center sm:justify-between">
-                  <div><Link href={`/diensten/${s.slug}`} className="font-semibold hover:underline">{s.title}</Link><p className="text-sm text-muted">{s.price_type === "op_aanvraag" ? "Op aanvraag" : `${s.price_type === "vanaf" ? "Vanaf " : ""}${euro(s.price_cents)}${s.price_type === "uur" ? " p/u" : ""}`}</p></div>
-                  <div className="flex items-center gap-3">
-                    <StatusBadge label={s.status === "actief" ? "Actief" : s.status === "verborgen" ? "Verborgen door moderatie" : "Gepauzeerd"} tone={s.status === "actief" ? "ok" : "neutral"} />
-                    {s.status !== "verborgen" && (
-                      <form action={setServiceStatus}><input type="hidden" name="id" value={s.id} /><input type="hidden" name="status" value={s.status === "actief" ? "gepauzeerd" : "actief"} /><button type="submit" className="text-sm link">{s.status === "actief" ? "Pauzeren" : "Activeren"}</button></form>
-                    )}
-                    <form action={setServiceStatus}><input type="hidden" name="id" value={s.id} /><input type="hidden" name="status" value="verwijderd" /><button type="submit" className="text-sm text-muted hover:text-danger hover:underline">Verwijderen</button></form>
-                  </div>
+          <h2 id="dienst-titel" className="mb-1 text-lg font-bold">Wat bied je aan?</h2>
+          <p className="mb-4 text-sm text-ink-soft">Diensten staan op je profiel en hebben een eigen pagina. Met pakketten kan een klant kiezen tussen bijvoorbeeld Basis, Plus en Compleet.</p>
+          {serviceCards.length > 0 && (
+            <ul className="mb-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {serviceCards.map(({ s, photo }) => (
+                <li key={s.id}>
+                  <ServiceCard s={s} fallback={photo}>
+                    <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-line pt-3">
+                      <StatusBadge label={s.status === "actief" ? "Actief" : s.status === "verborgen" ? "Verborgen door moderatie" : "Gepauzeerd"} tone={s.status === "actief" ? "ok" : "neutral"} />
+                      {s.status !== "verborgen" && (
+                        <form action={setServiceStatus}><input type="hidden" name="id" value={s.id} /><input type="hidden" name="status" value={s.status === "actief" ? "gepauzeerd" : "actief"} /><button type="submit" className="text-sm link">{s.status === "actief" ? "Pauzeren" : "Activeren"}</button></form>
+                      )}
+                      <form action={setServiceStatus} className="ml-auto"><input type="hidden" name="id" value={s.id} /><input type="hidden" name="status" value="verwijderd" /><button type="submit" className="text-sm text-muted hover:text-danger hover:underline">Verwijderen</button></form>
+                    </div>
+                  </ServiceCard>
                 </li>
               ))}
             </ul>
           )}
-          <details className="card p-4">
-            <summary className="cursor-pointer font-semibold">Dienst toevoegen</summary>
-            <ActionForm action={addService} className="mt-4 grid gap-4">
-              <div><label htmlFor="sv-cat" className="label">Categorie</label><select id="sv-cat" name="category_id" required className="input"><option value="">Kies…</option>{tree.map((pa) => <optgroup key={pa.id} label={pa.name}>{pa.children.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</optgroup>)}</select></div>
-              <div><label htmlFor="sv-title" className="label">Titel</label><input id="sv-title" name="title" required minLength={8} maxLength={90} className="input" /></div>
-              <div><label htmlFor="sv-desc" className="label">Wat krijgt de klant?</label><textarea id="sv-desc" name="description" required minLength={40} maxLength={5000} rows={4} className="input" /></div>
-              <div className="grid gap-4 sm:grid-cols-3">
-                <div><label htmlFor="sv-pt" className="label">Prijs</label><select id="sv-pt" name="price_type" className="input"><option value="vast">Vaste prijs</option><option value="vanaf">Vanaf</option><option value="uur">Per uur</option><option value="op_aanvraag">Op aanvraag</option></select></div>
-                <div><label htmlFor="sv-price" className="label">Bedrag (€)</label><input id="sv-price" name="price" inputMode="decimal" className="input" /></div>
-                <div><label htmlFor="sv-mode" className="label">Waar</label><select id="sv-mode" name="work_mode" className="input"><option value="op_locatie">Op locatie</option><option value="online">Online</option><option value="beide">Allebei</option></select></div>
-              </div>
-              <div><label htmlFor="sv-del" className="label">Levertijd of duur <span className="font-normal text-muted">(optioneel)</span></label><input id="sv-del" name="delivery_note" maxLength={120} className="input" placeholder="Bijv. binnen 5 werkdagen" /></div>
-              <div><SubmitButton className="btn-secondary">Dienst publiceren</SubmitButton></div>
-            </ActionForm>
-          </details>
+          <ServiceForm userId={me.id} tree={tree.map((p) => ({ id: p.id, name: p.name, children: p.children.map((c) => ({ id: c.id, name: c.name })) }))} />
         </section>
 
         <section className="card p-5 sm:p-6" aria-labelledby="kvk-titel">

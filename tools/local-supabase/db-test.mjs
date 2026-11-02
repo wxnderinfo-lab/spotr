@@ -370,6 +370,21 @@ ok((await err(null, "select public._local_storage_insert('avatars', 'anon/x.webp
 await su("update public.jobs set expires_at = now() - interval '1 minute' where id = $1", [other]);
 ok((await su("select public.expire_jobs() as n")).rows[0].n >= 1, "verlopen opdrachten worden gesloten");
 
+// ── Diensten met pakketten ───────────────────────────────────────────────
+const svc = (u, pk, cover = null) => as(u, `insert into public.services (provider_id, category_id, slug, title, description, price_type, price_cents, packages, cover_path)
+  values ($1, $2, $3, 'Woonkamer schilderen compleet', 'Muren en plafond in twee lagen, inclusief afplakken en opruimen na afloop.', 'vanaf', 25000, $4, $5) returning id`,
+  [u, schilder, `dienst-${crypto.randomUUID().slice(0, 8)}`, JSON.stringify(pk), cover]);
+const pk3 = [{ name: "Basis", price_cents: 25000, description: "Alleen muren", delivery: "1 dag" }, { name: "Plus", price_cents: 39500, description: "Muren en plafond" }, { name: "Compleet", price_cents: 60000 }];
+ok((await svc(pro, pk3, `${pro}/omslag.webp`)).rows.length === 1, "dienst met drie pakketten en eigen omslagfoto");
+ok((await one(pro, "select public.valid_service_packages('[]') as v")).v === true, "lege pakketlijst is geldig (diensten zonder pakketten)");
+ok(await svc(pro, [...pk3, { name: "Extra", price_cents: 70000 }]).then(() => false, () => true), "meer dan drie pakketten geweigerd");
+ok(await svc(pro, [{ name: "Basis", price_cents: 50 }]).then(() => false, () => true), "pakketprijs onder € 1 geweigerd");
+ok(await svc(pro, [{ name: "B", price_cents: 5000 }]).then(() => false, () => true), "te korte pakketnaam geweigerd");
+ok(await svc(pro, [{ name: "Basis", price_cents: "5000" }]).then(() => false, () => true), "prijs als tekst geweigerd");
+ok(await svc(pro, [{ name: "Basis", price_cents: 5000, script: "<x>" }]).then(() => false, () => true), "onbekende velden in pakket geweigerd");
+ok(await svc(pro, pk3, `${client}/van-een-ander.webp`).then(() => false, () => true), "omslagfoto uit andermans map geweigerd");
+ok(await svc(pro, pk3, `${pro}/../${client}/x.webp`).then(() => false, () => true), "omslagpad met .. geweigerd");
+
 console.log(`\n${passed} geslaagd, ${failures.length} mislukt`);
 if (failures.length) {
   console.log("Mislukt:\n- " + failures.join("\n- "));

@@ -1,6 +1,8 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import Image from "next/image";
 import { getCategoryTree } from "@/lib/data";
+import { photoFor } from "@/config/photos";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { PageHeader } from "@/components/ui";
 
@@ -18,7 +20,13 @@ export default async function CategoriesPage() {
       <PageHeader title="Alle categorieën" intro="Lokale klussen en online werk. Ontbreekt jouw vak? Laat het weten via contact; we breiden zorgvuldig uit." />
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {tree.map((p) => (
-          <section key={p.id} className="card p-5" aria-labelledby={`c-${p.slug}`}>
+          <section key={p.id} className="card overflow-hidden" aria-labelledby={`c-${p.slug}`}>
+            {photoFor(p.slug) && (
+              <Link href={`/categorieen/${p.slug}`} tabIndex={-1} aria-hidden className="relative block aspect-[16/9] bg-sunken">
+                <Image src={photoFor(p.slug)!.src} alt="" fill sizes="(min-width: 1024px) 380px, (min-width: 640px) 45vw, 90vw" className="object-cover" />
+              </Link>
+            )}
+            <div className="p-5">
             <h2 id={`c-${p.slug}`} className="text-lg font-bold">
               <Link href={`/categorieen/${p.slug}`} className="hover:underline">{p.name}</Link>
             </h2>
@@ -31,6 +39,7 @@ export default async function CategoriesPage() {
                 </li>
               ))}
             </ul>
+            </div>
           </section>
         ))}
       </div>

@@ -1,4 +1,6 @@
 import Link from "next/link";
+import Image from "next/image";
+import { photoFor } from "@/config/photos";
 import type { Category, CategoryNode } from "@/lib/data";
 import { searchJobs, searchPros } from "@/lib/data";
 import { createPublicClient } from "@/lib/supabase/server";
@@ -19,9 +21,15 @@ export function CategoryView({ cat, parent, subs, content }: {
   cat: Category; parent: Category | null; subs: Category[]; content: Awaited<ReturnType<typeof categoryContent>>;
 }) {
   const { jobs, pros, articles } = content;
+  const photo = photoFor(cat.slug, parent?.slug);
   return (
     <div className="container-page py-8">
       <Breadcrumbs items={[{ name: "Categorieën", href: "/categorieen" }, ...(parent ? [{ name: parent.name, href: `/categorieen/${parent.slug}` }] : []), { name: cat.name }]} />
+      {photo && (
+        <div className="relative mb-8 aspect-[3/1] overflow-hidden rounded-2xl bg-sunken sm:aspect-[4/1]">
+          <Image src={photo.src} alt={photo.alt} fill priority sizes="(min-width: 1280px) 1200px, 100vw" className="object-cover" />
+        </div>
+      )}
       <PageHeader
         eyebrow={parent?.name ?? "Categorie"}
         title={cat.name}

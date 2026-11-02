@@ -1,7 +1,10 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { ArrowRight, Search, ShieldCheck, Euro, MessagesSquare, Sparkles, Star, Sprout, MapPin, Monitor } from "lucide-react";
+import Image from "next/image";
+import { ArrowRight, Search, ShieldCheck, Euro, MessagesSquare, Sparkles, Star, Sprout, MapPin } from "lucide-react";
 import { getCategoryTree, searchJobs } from "@/lib/data";
+import { heroPhoto } from "@/config/photos";
+import { CategoryTile } from "@/components/CategoryTile";
 import { JobCard } from "@/components/cards";
 import { WaitlistForm } from "@/components/WaitlistForm";
 import { plans } from "@/config/pricing";
@@ -56,7 +59,11 @@ export default async function HomePage() {
               <span className="text-sm text-muted">Gratis, zonder account rondkijken</span>
             </div>
           </div>
-          <div className="card p-6">
+          <div className="relative">
+          <div className="relative aspect-[4/3] overflow-hidden rounded-3xl bg-sunken lg:aspect-[4/5]">
+            <Image src={heroPhoto.src} alt={heroPhoto.alt} fill priority sizes="(min-width: 1024px) 520px, 100vw" className="object-cover" />
+          </div>
+          <div className="card relative -mt-16 mx-3 p-6 shadow-lg sm:mx-6 lg:absolute lg:-bottom-8 lg:-left-10 lg:mx-0 lg:mt-0 lg:max-w-sm">
             <h2 className="text-lg font-bold">Zo werkt het</h2>
             <ol className="mt-4 space-y-4">
               {[
@@ -75,6 +82,7 @@ export default async function HomePage() {
             </ol>
             <Link href="/hoe-het-werkt" className="link mt-5 inline-block text-sm">Meer over hoe het werkt</Link>
           </div>
+          </div>
         </div>
       </section>
 
@@ -83,17 +91,9 @@ export default async function HomePage() {
           <h2 id="categorieen" className="text-2xl font-extrabold">Waar kunnen we mee helpen?</h2>
           <Link href="/categorieen" className="link shrink-0 text-sm">Alle categorieën</Link>
         </div>
-        <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <ul className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
           {tree.map((c) => (
-            <li key={c.id}>
-              <Link href={`/categorieen/${c.slug}`} className="card flex h-full flex-col p-4 hover:border-line-strong">
-                <span className="flex items-center gap-2 font-semibold">
-                  {c.work_mode === "online" ? <Monitor className="h-4 w-4 text-accent" aria-hidden /> : <MapPin className="h-4 w-4 text-accent" aria-hidden />}
-                  {c.name}
-                </span>
-                <span className="mt-1 text-sm text-muted">{c.children.slice(0, 3).map((s) => s.name).join(", ")}</span>
-              </Link>
-            </li>
+            <li key={c.id}><CategoryTile c={c} /></li>
           ))}
         </ul>
       </section>
